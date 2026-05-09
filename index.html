@@ -204,7 +204,7 @@
             <div class="mb-10">
                 <h3 class="text-sm font-bold text-slate-400 mb-6 uppercase flex items-center gap-2"><i data-lucide="target" class="w-4 h-4 text-emerald-500"></i> Cofres Ativos</h3>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="goalsContainer">
-                </div>
+                    </div>
             </div>
 
             <div class="w-full">
@@ -217,7 +217,7 @@
     </div>
 
     <div id="modalRegistro" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-blur overflow-y-auto">
-        <div class="bg-[#0d0d0f] border border-white/10 w-full max-lg rounded-[32px] p-8 shadow-2xl relative animate-in">
+        <div class="bg-[#0d0d0f] border border-white/10 w-full max-w-lg rounded-[32px] p-8 shadow-2xl relative animate-in">
             <button onclick="toggleModal('modalRegistro')" class="absolute top-6 right-6 text-slate-500"><i data-lucide="x" class="w-6 h-6"></i></button>
             <h3 id="modalTitle" class="text-2xl font-bold text-white mb-8 text-center tracking-tight">Novo Lançamento</h3>
             
@@ -279,7 +279,7 @@
     </div>
 
     <div id="modalDelete" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4 modal-blur">
-        <div class="bg-[#0d0d0f] border border-rose-500/20 w-full max-sm rounded-[32px] p-8 shadow-2xl text-center animate-in">
+        <div class="bg-[#0d0d0f] border border-rose-500/20 w-full max-w-sm rounded-[32px] p-8 shadow-2xl text-center animate-in">
             <h3 class="text-xl font-bold text-white mb-8" id="deleteMsg">Excluir lançamento?</h3>
             <div class="space-y-3">
                 <button onclick="executeDeleteOne()" class="w-full py-4 rounded-2xl bg-white/5 text-white font-bold text-[10px] uppercase">Apenas este mês</button>
@@ -290,7 +290,7 @@
     </div>
 
     <div id="modalGoal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-blur overflow-y-auto">
-        <div class="bg-[#0d0d0f] border border-white/10 w-full max-sm rounded-[32px] p-8 shadow-2xl relative animate-in">
+        <div class="bg-[#0d0d0f] border border-white/10 w-full max-w-sm rounded-[32px] p-8 shadow-2xl relative animate-in">
             <button onclick="toggleModal('modalGoal')" class="absolute top-6 right-6 text-slate-500"><i data-lucide="x" class="w-6 h-6"></i></button>
             <h3 class="text-2xl font-bold text-white mb-8 text-center tracking-tight">Criar Cofre</h3>
             <form id="goalForm" class="space-y-5">
@@ -302,7 +302,7 @@
     </div>
 
     <div id="modalAddFunds" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-blur overflow-y-auto">
-        <div class="bg-[#0d0d0f] border border-white/10 w-full max-sm rounded-[32px] p-8 shadow-2xl relative animate-in">
+        <div class="bg-[#0d0d0f] border border-white/10 w-full max-w-sm rounded-[32px] p-8 shadow-2xl relative animate-in">
             <button onclick="toggleModal('modalAddFunds')" class="absolute top-6 right-6 text-slate-500"><i data-lucide="x" class="w-6 h-6"></i></button>
             <h3 class="text-2xl font-bold text-white mb-2 text-center tracking-tight">Guardar Valor</h3>
             <p class="text-slate-500 text-xs text-center mb-6">Este valor será somado ao cofre.</p>
@@ -314,7 +314,7 @@
     </div>
 
     <div id="modalDeleteGoal" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4 modal-blur">
-        <div class="bg-[#0d0d0f] border border-rose-500/20 w-full max-sm rounded-[32px] p-8 shadow-2xl text-center animate-in">
+        <div class="bg-[#0d0d0f] border border-rose-500/20 w-full max-w-sm rounded-[32px] p-8 shadow-2xl text-center animate-in">
             <h3 class="text-xl font-bold text-white mb-8" id="deleteGoalMsg">Excluir cofre?</h3>
             <div class="space-y-3">
                 <button onclick="executeDeleteGoal()" class="w-full py-4 rounded-2xl bg-rose-500 text-white font-bold text-[10px] uppercase">Sim, excluir</button>
@@ -325,10 +325,9 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch, query, where } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 
-        // Credenciais atualizadas para o projeto do João
         const firebaseConfig = {
             apiKey: "AIzaSyA1A1jNtY3pIHjsqCOhNV_E_HIzUjkT1gE",
             authDomain: "financas-joao-795ec.firebaseapp.com",
@@ -360,15 +359,13 @@
                 document.getElementById('bodyContainer').classList.remove('overflow-hidden');
                 document.getElementById('userEmailDisplay').innerText = user.email;
                 
-                const q = query(transRef, where("userId", "==", user.uid));
-                onSnapshot(q, (snap) => {
+                onSnapshot(transRef, (snap) => {
                     state = snap.docs.map(d => ({ firestoreId: d.id, ...d.data() }));
                     render();
                     if (!document.getElementById('planningContainer').classList.contains('hidden')) renderPlanning();
                 });
 
-                const qGoals = query(goalsRef, where("userId", "==", user.uid));
-                onSnapshot(qGoals, (snap) => {
+                onSnapshot(goalsRef, (snap) => {
                     goalsState = snap.docs.map(d => ({ firestoreId: d.id, ...d.data() }));
                     if (!document.getElementById('planningContainer').classList.contains('hidden')) renderGoals();
                 });
@@ -387,11 +384,11 @@
 
         window.logout = () => signOut(auth);
 
+        // -- LÓGICA DE TRANSAÇÕES --
         async function handleFormSubmit(e) {
             e.preventDefault();
             const editId = document.getElementById('editId').value;
             const data = {
-                userId: auth.currentUser.uid,
                 desc: document.getElementById('desc').value,
                 value: parseFloat(document.getElementById('value').value),
                 category: document.getElementById('category').value,
@@ -454,30 +451,39 @@
 
             const currentT = state.filter(t => t.month === m && t.year === y);
             
+            // Elementos de Busca e Filtro
             const searchInput = document.getElementById('searchInput');
             const typeFilterEl = document.getElementById('typeFilter');
             const search = searchInput ? searchInput.value.toLowerCase() : '';
             const typeFilter = typeFilterEl ? typeFilterEl.value : 'all';
             
+            // Aplica Busca e Filtro na visualização
             const filteredT = currentT.filter(t => {
                 const matchSearch = t.desc.toLowerCase().includes(search);
                 let matchType = true;
+                
                 if (typeFilter === 'monthly') matchType = t.frequency === 'monthly';
                 else if (typeFilter === 'installments') matchType = t.frequency === 'installments';
                 else if (typeFilter === 'pix') matchType = t.paymentMethod === 'pix';
                 else if (typeFilter === 'credit') matchType = t.paymentMethod === 'credit';
                 else if (typeFilter === 'debit') matchType = t.paymentMethod === 'debit';
                 else if (typeFilter === 'money') matchType = t.paymentMethod === 'money';
+
                 return matchSearch && matchType;
             });
 
+            // Resumo sempre calcula o mês inteiro
             let inc = 0, exp = 0, pendingExp = 0, vExp = 0, rExp = 0, cats = {};
             currentT.forEach(t => {
                 if(t.type === 'income') {
                     inc += t.value;
                 } else {
                     exp += t.value;
-                    if (!t.paid) pendingExp += t.value;
+                    
+                    if (!t.paid) {
+                        pendingExp += t.value;
+                    }
+
                     const catName = t.category || 'Outros'; 
                     cats[catName] = (cats[catName] || 0) + t.value;
                     
@@ -510,51 +516,123 @@
             document.getElementById('valueVictor').innerText = `R$ ${vExp.toLocaleString('pt-br', {minimumFractionDigits: 2})}`;
             document.getElementById('valueRafaela').innerText = `R$ ${rExp.toLocaleString('pt-br', {minimumFractionDigits: 2})}`;
 
+            // Renderizar Essenciais
+            const ess = [
+                { l: 'Aluguel', i: 'home', m: (d) => d.includes('aluguel') },
+                { l: 'Luz', i: 'zap', m: (d) => d.includes('luz') || d.includes('energia') },
+                { l: 'Internet', i: 'wifi', m: (d) => d.includes('internet') },
+                { l: 'Mercado', i: 'shopping-cart', m: (d) => (d.includes('mercado') || d.includes('supermercado')) && !d.includes('livre') },
+                { l: 'Shopee', i: 'shopping-bag', m: (d) => d.includes('shopee') }
+            ];
+            
+            const tracker = document.getElementById('essentialTracker'); tracker.innerHTML = '';
+            ess.forEach(e => {
+                const matches = currentT.filter(t => e.m(t.desc.toLowerCase()));
+                
+                let f = null;
+                if (matches.length > 0) {
+                    matches.sort((a, b) => b.value - a.value);
+                    f = matches[0];
+                }
+
+                const div = document.createElement('div');
+                div.className = `p-4 rounded-2xl border cursor-pointer transition-all ${f ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-white/5 border-white/5 opacity-40 hover:opacity-100'}`;
+                
+                if(!f) {
+                    div.onclick = () => { 
+                        window.resetForm();
+                        document.getElementById('desc').value = e.l; 
+                        document.getElementById('frequency').value = 'monthly'; 
+                        document.getElementById('category').value = (e.l === 'Shopee' || e.l === 'Mercado') ? e.l : 'Essencial';
+                        window.toggleModal('modalRegistro'); 
+                    };
+                }
+
+                div.innerHTML = `<i data-lucide="${e.i}" class="w-4 h-4 ${f ? 'text-emerald-500' : 'text-slate-500'} mb-2"></i><p class="text-[9px] font-bold uppercase tracking-widest ${f ? 'text-white' : 'text-slate-500'}">${e.l}</p><p class="text-xs font-bold font-mono ${f ? 'text-emerald-400' : 'text-slate-700'}">${f ? 'R$ '+f.value.toLocaleString('pt-br', {minimumFractionDigits: 2}) : 'Pendente'}</p>`;
+                tracker.appendChild(div);
+            });
+
+            const pendingItems = filteredT.filter(t => !t.paid && t.type === 'expense').length;
+            const pendingBadge = document.getElementById('pendingCount');
+            pendingBadge.innerText = pendingItems > 0 ? `${pendingItems} pendentes` : 'Tudo Pago';
+            pendingBadge.className = pendingItems > 0 
+                ? 'text-[10px] bg-rose-500/10 text-rose-500 px-2 py-1 rounded font-bold uppercase hidden sm:inline-block' 
+                : 'text-[10px] bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded font-bold uppercase hidden sm:inline-block';
+
+            // Renderizar Tabela
             const tbody = document.getElementById('transactionBody'); tbody.innerHTML = '';
             filteredT.sort((a,b) => b.value - a.value).forEach(t => {
                 const tr = document.createElement('tr'); tr.className = "group hover:bg-white/[0.02]";
+                
                 const isPaid = t.paid || false;
-                const icon = isPaid ? 'check-circle-2' : (t.type === 'income' ? 'trending-up' : 'credit-card');
+                const iconBase = t.type === 'income' ? 'trending-up' : 'credit-card';
+                const icon = isPaid ? 'check-circle-2' : iconBase;
+                const iconColor = isPaid ? 'text-emerald-500' : 'text-slate-400';
+                const bgIcon = isPaid ? 'bg-emerald-500/10' : 'bg-white/5';
+                const textStyle = isPaid ? 'opacity-40' : '';
+
+                let paymentBadge = '';
+                if(t.type === 'expense') {
+                    if (t.paymentMethod === 'pix') paymentBadge = `<span class="inline-flex items-center gap-1 bg-teal-500/10 text-teal-500 px-1.5 py-0.5 rounded text-[8px] font-bold tracking-widest uppercase ml-2"><i data-lucide="zap" class="w-3 h-3"></i> PIX</span>`;
+                    else if (t.paymentMethod === 'credit') paymentBadge = `<span class="inline-flex items-center gap-1 bg-blue-500/10 text-blue-500 px-1.5 py-0.5 rounded text-[8px] font-bold tracking-widest uppercase ml-2"><i data-lucide="credit-card" class="w-3 h-3"></i> Cartão</span>`;
+                    else if (t.paymentMethod === 'debit') paymentBadge = `<span class="inline-flex items-center gap-1 bg-slate-500/10 text-slate-400 px-1.5 py-0.5 rounded text-[8px] font-bold tracking-widest uppercase ml-2"><i data-lucide="wallet" class="w-3 h-3"></i> Débito</span>`;
+                    else if (t.paymentMethod === 'money') paymentBadge = `<span class="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 rounded text-[8px] font-bold tracking-widest uppercase ml-2"><i data-lucide="banknote" class="w-3 h-3"></i> Dinheiro</span>`;
+                }
+
+                // Cria o texto de frequência para usar nas duas views
                 const freqText = t.totalInstallments ? t.currentInstallment+'/'+t.totalInstallments : (t.frequency==='monthly'?'Fixo':'Único');
 
                 tr.innerHTML = `<td class="py-4 flex items-center gap-3">
-                    <button onclick="togglePaid('${t.firestoreId}', ${isPaid})" class="min-w-[32px] w-8 h-8 rounded-lg ${isPaid ? 'bg-emerald-500/10' : 'bg-white/5'} flex items-center justify-center hover:scale-110 transition-all cursor-pointer">
-                        <i data-lucide="${icon}" class="w-4 h-4 ${isPaid ? 'text-emerald-500' : 'text-slate-400'}"></i>
+                    <button onclick="togglePaid('${t.firestoreId}', ${isPaid})" class="min-w-[32px] w-8 h-8 rounded-lg ${bgIcon} flex items-center justify-center hover:scale-110 transition-all cursor-pointer">
+                        <i data-lucide="${icon}" class="w-4 h-4 ${iconColor}"></i>
                     </button>
-                    <div class="${isPaid ? 'opacity-40' : ''} transition-all w-full">
-                        <p class="font-bold text-white text-sm leading-tight flex items-center flex-wrap gap-x-2 gap-y-1 ${isPaid ? 'line-through' : ''}">${t.desc}</p>
-                        <p class="text-[9px] text-slate-500 uppercase tracking-widest mt-1">${t.category || 'Outros'}</p>
+                    <div class="${textStyle} transition-all w-full">
+                        <p class="font-bold text-white text-sm leading-tight flex items-center flex-wrap gap-x-2 gap-y-1 ${isPaid ? 'line-through' : ''}">${t.desc} ${paymentBadge}</p>
+                        
+                        <div class="flex items-center gap-2 mt-1 flex-wrap">
+                            <p class="text-[9px] text-slate-500 uppercase tracking-widest">${t.category || 'Outros'}</p>
+                            <span class="text-[8px] bg-white/5 px-1.5 py-0.5 rounded text-slate-400 font-bold uppercase sm:hidden">${freqText}</span>
+                            <span class="text-[8px] bg-white/5 px-1.5 py-0.5 rounded text-slate-400 font-bold uppercase md:hidden">${t.responsible}</span>
+                        </div>
                     </div>
                 </td>
-                <td class="py-4 text-center text-[9px] text-slate-500 font-bold uppercase hidden sm:table-cell">${freqText}</td>
-                <td class="py-4 text-[9px] text-slate-400 font-bold uppercase hidden md:table-cell">${t.responsible}</td>
-                <td class="py-4 text-right font-mono font-bold ${t.type==='income'?'text-emerald-400':'text-rose-400'}">R$ ${t.value.toLocaleString('pt-br', {minimumFractionDigits: 2})}</td>
+                
+                <td class="py-4 text-center text-[9px] text-slate-500 font-bold uppercase ${textStyle} hidden sm:table-cell">${freqText}</td>
+                <td class="py-4 text-[9px] text-slate-400 font-bold uppercase ${textStyle} hidden md:table-cell">${t.responsible}</td>
+                
+                <td class="py-4 text-right font-mono font-bold ${t.type==='income'?'text-emerald-400':'text-rose-400'} ${textStyle}">R$ ${t.value.toLocaleString('pt-br', {minimumFractionDigits: 2})}</td>
                 <td class="py-4 text-center">
                     <div class="flex justify-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all">
                         <button onclick="openEditModal('${t.firestoreId}')" class="p-1 sm:p-2 text-slate-600 hover:text-emerald-500"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
                         <button onclick="promptDelete('${t.firestoreId}')" class="p-1 sm:p-2 text-slate-600 hover:text-rose-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </div>
                 </td>`;
+                
                 tbody.appendChild(tr);
             });
             document.getElementById('emptyState').classList.toggle('hidden', filteredT.length > 0);
+            document.getElementById('transactionCount').innerText = `${filteredT.length} ITENS`;
+
             updateChart(cats);
             lucide.createIcons();
         }
         
+        // CORREÇÃO: Exportar 'render' para o escopo global do HTML
         window.render = render;
-        
+
         function updateChart(data) {
             const ctx = document.getElementById('categoryChart').getContext('2d');
             const labels = Object.keys(data);
             const values = Object.values(data);
             const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e'];
+            
             if (categoryChart) categoryChart.destroy();
             categoryChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: { labels: labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0, hoverOffset: 8 }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '80%' }
             });
+            
             const legendDiv = document.getElementById('chartLegend'); legendDiv.innerHTML = '';
             labels.forEach((l, i) => {
                 legendDiv.innerHTML += `<div class="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest"><div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full" style="background:${colors[i]}"></div><span class="text-slate-400">${l}</span></div><span class="text-white font-mono">R$ ${data[l].toLocaleString('pt-br', {minimumFractionDigits: 2})}</span></div>`;
@@ -562,15 +640,26 @@
         }
 
         window.changeMonth = (d) => { currentDate.setMonth(currentDate.getMonth() + d); render(); };
-        window.toggleModal = (id) => { document.getElementById(id).classList.toggle('hidden'); };
+        
+        window.toggleModal = (id) => {
+            const m = document.getElementById(id); 
+            m.classList.toggle('hidden');
+            if(id === 'modalRegistro' && !m.classList.contains('hidden')) setTimeout(() => document.getElementById('desc').focus(), 100);
+            if(id === 'modalGoal' && !m.classList.contains('hidden')) setTimeout(() => document.getElementById('goalName').focus(), 100);
+            if(id === 'modalAddFunds' && !m.classList.contains('hidden')) setTimeout(() => document.getElementById('fundsValue').focus(), 100);
+        };
+
         window.resetForm = () => {
             document.getElementById('editId').value = "";
+            document.getElementById('modalTitle').innerText = "Novo Lançamento";
+            document.getElementById('submitBtn').innerText = "Salvar Registro";
             document.getElementById('financeForm').reset();
             document.getElementById('paymentMethod').value = "pix"; 
             window.toggleInstallmentField();
         };
 
         window.openNewModal = () => { window.resetForm(); window.toggleModal('modalRegistro'); };
+
         window.openEditModal = (id) => {
             const t = state.find(x => x.firestoreId === id);
             if (!t) return;
@@ -583,16 +672,22 @@
             document.getElementById('frequency').value = t.frequency;
             document.getElementById('type').value = t.type;
             document.getElementById('paymentMethod').value = t.paymentMethod || "pix";
+            
             if (t.frequency === 'installments') {
                 document.getElementById('currentInstallmentInput').value = t.currentInstallment;
                 document.getElementById('installments').value = t.totalInstallments;
             }
+            document.getElementById('modalTitle').innerText = "Editar Lançamento";
+            document.getElementById('submitBtn').innerText = "Salvar Alterações";
             window.toggleInstallmentField();
             window.toggleModal('modalRegistro'); 
         };
 
         window.promptDelete = (id) => {
+            const t = state.find(x => x.firestoreId === id);
             pendingDeleteId = id;
+            document.getElementById('btnDeleteAll').classList.toggle('hidden', !t.groupId);
+            document.getElementById('deleteMsg').innerText = `Remover "${t.desc}"?`;
             window.toggleModal('modalDelete');
         };
 
@@ -605,25 +700,51 @@
         };
 
         window.toggleInstallmentField = () => document.getElementById('installmentField').classList.toggle('hidden', document.getElementById('frequency').value !== 'installments');
+        
         window.openSalaryModal = () => { 
             window.resetForm(); 
             document.getElementById('desc').value = "Salário Mensal"; 
             document.getElementById('type').value = "income"; 
+            document.getElementById('category').value = "Outros"; 
+            document.getElementById('paymentMethod').value = "pix";
             window.toggleModal('modalRegistro'); 
         };
 
+        document.getElementById('financeForm').onsubmit = handleFormSubmit;
+
+        // -- LÓGICA DA ABA DE PLANEJAMENTO E COFRES --
         window.switchTab = (tab) => {
             const dashboard = document.getElementById('dashboardContainer');
             const planning = document.getElementById('planningContainer');
+            
+            // Desktop Elements
+            const btnDash = document.getElementById('btnTabDashboard');
+            const btnPlan = document.getElementById('btnTabPlanning');
+            
+            // Mobile Elements
+            const btnMobDash = document.getElementById('btnMobTabDashboard');
+            const btnMobPlan = document.getElementById('btnMobTabPlanning');
+
             if (tab === 'dashboard') {
                 dashboard.classList.remove('hidden'); planning.classList.add('hidden');
-                document.getElementById('btnTabDashboard').classList.add('sidebar-item-active');
-                document.getElementById('btnTabPlanning').classList.remove('sidebar-item-active');
+                
+                if(btnDash) { btnDash.classList.add('sidebar-item-active', 'text-[#10b981]'); btnDash.classList.remove('text-slate-500'); }
+                if(btnPlan) { btnPlan.classList.remove('sidebar-item-active', 'text-[#10b981]'); btnPlan.classList.add('text-slate-500'); }
+                
+                if(btnMobDash) { btnMobDash.classList.add('text-[#10b981]'); btnMobDash.classList.remove('text-slate-500'); }
+                if(btnMobPlan) { btnMobPlan.classList.remove('text-[#10b981]'); btnMobPlan.classList.add('text-slate-500'); }
+                
             } else {
                 dashboard.classList.add('hidden'); planning.classList.remove('hidden');
-                document.getElementById('btnTabPlanning').classList.add('sidebar-item-active');
-                document.getElementById('btnTabDashboard').classList.remove('sidebar-item-active');
-                renderPlanning(); renderGoals();
+                
+                if(btnPlan) { btnPlan.classList.add('sidebar-item-active', 'text-[#10b981]'); btnPlan.classList.remove('text-slate-500'); }
+                if(btnDash) { btnDash.classList.remove('sidebar-item-active', 'text-[#10b981]'); btnDash.classList.add('text-slate-500'); }
+                
+                if(btnMobPlan) { btnMobPlan.classList.add('text-[#10b981]'); btnMobPlan.classList.remove('text-slate-500'); }
+                if(btnMobDash) { btnMobDash.classList.remove('text-[#10b981]'); btnMobDash.classList.add('text-slate-500'); }
+                
+                renderPlanning(); 
+                renderGoals();
             }
         };
 
@@ -631,11 +752,13 @@
             const monthsNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
             let labels = [];
             let projectedBalances = [];
+            
             for (let i = 0; i < 6; i++) {
                 let targetDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + i, 1);
                 let m = targetDate.getMonth();
                 let y = targetDate.getFullYear();
                 labels.push(`${monthsNames[m]}/${y.toString().slice(-2)}`);
+
                 let tMonth = state.filter(t => t.month === m && t.year === y);
                 let inc = 0, exp = 0;
                 tMonth.forEach(t => {
@@ -644,8 +767,10 @@
                 });
                 projectedBalances.push(inc - exp);
             }
+
             const ctx = document.getElementById('projectionChart').getContext('2d');
             if (projChartInstance) projChartInstance.destroy();
+            
             projChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -657,61 +782,110 @@
                         backgroundColor: 'rgba(16, 185, 129, 0.1)',
                         borderWidth: 2,
                         fill: true,
-                        tension: 0.4
+                        tension: 0.4,
+                        pointBackgroundColor: '#0d0d0f',
+                        pointBorderColor: '#10b981',
+                        pointBorderWidth: 2,
+                        pointRadius: 4
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', font: { family: 'mono', size: 10 } } },
+                        x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10, weight: 'bold' } } }
+                    }
+                }
             });
         };
 
         window.renderGoals = () => {
             const container = document.getElementById('goalsContainer');
             container.innerHTML = '';
+            
             goalsState.forEach(goal => {
                 const perc = goal.target > 0 ? Math.min(100, (goal.saved / goal.target) * 100) : 0;
+                const isComplete = perc >= 100;
+                
+                const colorBase = isComplete ? 'emerald' : 'blue';
                 const div = document.createElement('div');
-                div.className = `card-premium border-blue-500/10 relative group transition-all`;
+                div.className = `card-premium border-${colorBase}-500/10 relative group transition-all`;
+                
                 div.innerHTML = `
                     <div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all z-10">
-                        <button onclick="openAddFundsModal('${goal.firestoreId}')" class="p-1.5 bg-emerald-500/10 text-emerald-500 rounded-lg hover:scale-110"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
-                        <button onclick="promptDeleteGoal('${goal.firestoreId}')" class="p-1.5 bg-rose-500/10 text-rose-500 rounded-lg hover:scale-110"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="openAddFundsModal('${goal.firestoreId}')" class="p-1.5 bg-emerald-500/10 text-emerald-500 rounded-lg hover:scale-110 transition-all" title="Adicionar Saldo"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="promptDeleteGoal('${goal.firestoreId}')" class="p-1.5 bg-rose-500/10 text-rose-500 rounded-lg hover:scale-110 transition-all" title="Excluir Cofre"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                     </div>
-                    <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Cofre</p>
-                    <p class="text-lg font-bold text-white mb-4">${goal.name}</p>
-                    <div class="flex justify-between text-[11px] mb-2 font-bold">
-                        <span class="text-blue-400">R$ ${goal.saved.toLocaleString('pt-br')}</span>
-                        <span class="text-slate-500">R$ ${goal.target.toLocaleString('pt-br')}</span>
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="pr-16">
+                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Cofre Ativo</p>
+                            <p class="text-lg font-bold text-white tracking-tight leading-tight">${goal.name}</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-[11px] mb-2 font-bold mt-6">
+                        <span class="text-${colorBase}-400">R$ ${goal.saved.toLocaleString('pt-br', {minimumFractionDigits: 2})}</span>
+                        <span class="text-slate-500">R$ ${goal.target.toLocaleString('pt-br', {minimumFractionDigits: 2})}</span>
                     </div>
                     <div class="h-2 w-full bg-white/5 rounded-full overflow-hidden flex border border-white/5">
-                        <div class="h-full bg-blue-500" style="width: ${perc}%"></div>
-                    </div>`;
+                        <div class="h-full bg-${colorBase}-500 transition-all duration-1000" style="width: ${perc}%"></div>
+                    </div>
+                `;
                 container.appendChild(div);
             });
+
+            const btnDiv = document.createElement('div');
+            btnDiv.className = "card-premium border-dashed border-white/10 flex flex-col items-center justify-center text-slate-500 hover:text-white cursor-pointer group min-h-[160px]";
+            btnDiv.onclick = () => {
+                document.getElementById('goalForm').reset();
+                window.toggleModal('modalGoal');
+            };
+            btnDiv.innerHTML = `
+                <i data-lucide="plus" class="w-6 h-6 mb-2 group-hover:scale-125 transition-all group-hover:text-emerald-500"></i>
+                <p class="text-[10px] font-bold uppercase tracking-widest">Criar Cofre</p>
+            `;
+            container.appendChild(btnDiv);
             lucide.createIcons();
         };
 
-        document.getElementById('financeForm').onsubmit = handleFormSubmit;
         document.getElementById('goalForm').onsubmit = async (e) => {
             e.preventDefault();
-            await setDoc(doc(collection(db, "goals")), {
-                userId: auth.currentUser.uid,
+            const data = {
                 name: document.getElementById('goalName').value,
                 target: parseFloat(document.getElementById('goalTarget').value),
                 saved: 0
-            });
-            toggleModal('modalGoal');
+            };
+            await setDoc(doc(collection(db, "goals")), data);
+            window.toggleModal('modalGoal');
         };
-        
-        window.openAddFundsModal = (id) => { activeGoalId = id; toggleModal('modalAddFunds'); };
+
+        window.openAddFundsModal = (id) => {
+            activeGoalId = id;
+            document.getElementById('addFundsForm').reset();
+            window.toggleModal('modalAddFunds');
+        };
+
         document.getElementById('addFundsForm').onsubmit = async (e) => {
             e.preventDefault();
             const amount = parseFloat(document.getElementById('fundsValue').value);
             const goal = goalsState.find(g => g.firestoreId === activeGoalId);
-            if (goal) await setDoc(doc(db, "goals", activeGoalId), { saved: goal.saved + amount }, { merge: true });
-            toggleModal('modalAddFunds');
+            if (goal) {
+                await setDoc(doc(db, "goals", activeGoalId), { saved: goal.saved + amount }, { merge: true });
+            }
+            window.toggleModal('modalAddFunds');
         };
-        window.promptDeleteGoal = (id) => { activeGoalId = id; toggleModal('modalDeleteGoal'); };
-        window.executeDeleteGoal = async () => { await deleteDoc(doc(db, "goals", activeGoalId)); toggleModal('modalDeleteGoal'); };
+
+        window.promptDeleteGoal = (id) => {
+            activeGoalId = id;
+            const goal = goalsState.find(g => g.firestoreId === activeGoalId);
+            document.getElementById('deleteGoalMsg').innerText = `Excluir o cofre "${goal.name}"?`;
+            window.toggleModal('modalDeleteGoal');
+        };
+
+        window.executeDeleteGoal = async () => {
+            await deleteDoc(doc(db, "goals", activeGoalId));
+            window.toggleModal('modalDeleteGoal');
+        };
 
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
     </script>
