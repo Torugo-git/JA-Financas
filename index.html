@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J&A | Gestão Financeira Inteligente</title>
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0a0a0b">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/5817/5817088.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0a0a0b; color: #f8fafc; margin: 0; }
+        .card-premium { background: #0d0d0f; border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; padding: 1.5rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-premium:hover { border-color: rgba(16, 185, 129, 0.2); background: #111113; }
+        .sidebar-item-active { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .modal-blur { backdrop-filter: blur(12px); background: rgba(0, 0, 0, 0.8); }
+        input, select { background: #161618 !important; border: 1px solid rgba(255,255,255,0.1) !important; color: white !important; transition: all 0.2s; }
+        input:focus, select:focus { border-color: #10b981 !important; outline: none; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1); }
+        
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #0a0a0b; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+
+        .btn-primary { background: white; color: black; transition: all 0.2s; font-weight: 700; border-radius: 16px; }
+        .btn-primary:hover { transform: translateY(-2px); background: #e2e8f0; }
+        
+        .animate-in { animation: fadeIn 0.25s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="min-h-screen flex bg-[#0a0a0b] overflow-hidden" id="bodyContainer">
+
+    <div id="loginScreen" class="fixed inset-0 z-[100] bg-[#0a0a0b] flex flex-col items-center justify-center p-6 animate-in">
+        <div class="mb-12 text-center">
+            <h1 class="text-3xl font-bold tracking-tighter text-white flex items-center gap-2 justify-center">
+                <span class="text-emerald-500 underline decoration-2 underline-offset-8">J&A</span>
+                <span class="font-light text-slate-400">Finanças</span>
+            </h1>
+            <p class="text-slate-500 text-xs mt-4 uppercase tracking-[0.2em] font-bold">Cofre Digital Premium</p>
+        </div>
+        <div class="bg-[#0d0d0f] border border-white/5 w-full max-w-sm rounded-[32px] p-8 shadow-2xl">
+            <form id="loginForm" class="space-y-4">
+                <input id="emailInput" type="email" required placeholder="E-mail" class="w-full px-5 py-4 rounded-2xl text-sm">
+                <input id="passwordInput" type="password" required placeholder="Senha" class="w-full px-5 py-4 rounded-2xl text-sm">
+                <p id="loginError" class="text-rose-500 text-[10px] font-bold text-center hidden">Credenciais incorretas.</p>
+                <button type="submit" id="loginBtn" class="w-full bg-white text-black font-bold py-5 rounded-2xl mt-4 shadow-lg uppercase text-xs tracking-widest">Acessar</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="appContainer" class="w-full h-full flex hidden">
+        <aside class="w-64 border-r border-white/5 bg-[#0d0d0f] p-6 hidden lg:flex flex-col sticky top-0 h-screen">
+            <div class="mb-10">
+                <h1 class="text-xl font-bold tracking-tighter text-white flex items-center gap-2">
+                    <span class="text-emerald-500 underline decoration-2 underline-offset-8">J&A</span>
+                    <span class="font-light text-slate-400 text-lg">Finanças</span>
+                </h1>
+            </div>
+            <nav class="space-y-2 flex-1">
+                <div id="btnTabDashboard" onclick="switchTab('dashboard')" class="flex items-center gap-3 px-4 py-3 rounded-xl sidebar-item-active font-semibold cursor-pointer transition-all"><i data-lucide="layout-dashboard" class="w-4 h-4"></i> Painel</div>
+                <div id="btnTabPlanning" onclick="switchTab('planning')" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:text-white hover:bg-white/5 transition-all cursor-pointer"><i data-lucide="line-chart" class="w-4 h-4"></i> Planejamento</div>
+                <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:text-rose-500 transition-all text-left font-medium"><i data-lucide="log-out" class="w-4 h-4"></i> Sair</button>
+            </nav>
+            <div class="mt-auto p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl text-center">
+                <p class="text-[10px] font-bold text-emerald-500 uppercase mb-1">Nuvem Ativa</p>
+                <p class="text-[11px] text-slate-400 font-medium truncate" id="userEmailDisplay">...</p>
+            </div>
+        </aside>
+
+        <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-[#0d0d0f]/95 backdrop-blur-md border-t border-white/5 z-40 flex justify-around items-center p-3 pb-safe shadow-2xl">
+            <button id="btnMobTabDashboard" onclick="switchTab('dashboard')" class="flex flex-col items-center gap-1.5 p-2 w-full text-[#10b981] transition-all">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                <span class="text-[9px] font-bold uppercase tracking-widest">Painel</span>
+            </button>
+            <button id="btnMobTabPlanning" onclick="switchTab('planning')" class="flex flex-col items-center gap-1.5 p-2 w-full text-slate-500 hover:text-white transition-all">
+                <i data-lucide="line-chart" class="w-5 h-5"></i>
+                <span class="text-[9px] font-bold uppercase tracking-widest">Planejar</span>
+            </button>
+            <button onclick="logout()" class="flex flex-col items-center gap-1.5 p-2 w-full text-slate-500 hover:text-rose-500 transition-all">
+                <i data-lucide="log-out" class="w-5 h-5"></i>
+                <span class="text-[9px] font-bold uppercase tracking-widest">Sair</span>
+            </button>
+        </nav>
+
+        <main id="dashboardContainer" class="flex-1 p-6 pb-28 md:p-10 lg:pb-10 overflow-y-auto h-screen animate-in">
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
+                <div class="flex items-center bg-[#0d0d0f] border border-white/5 rounded-2xl p-1 shadow-inner w-full md:w-auto justify-between md:justify-start">
+                    <button onclick="changeMonth(-1)" class="p-2 hover:bg-white/5 rounded-xl"><i data-lucide="chevron-left" class="w-5 h-5 text-slate-400"></i></button>
+                    <div id="displayMonth" class="px-6 font-bold text-white min-w-[150px] text-center capitalize">Carregando...</div>
+                    <button onclick="changeMonth(1)" class="p-2 hover:bg-white/5 rounded-xl"><i data-lucide="chevron-right" class="w-5 h-5 text-slate-400"></i></button>
+                </div>
+                <div class="flex items-center gap-3 w-full md:w-auto">
+                    <button onclick="openSalaryModal()" class="text-emerald-400 px-4 py-3 rounded-2xl border border-emerald-500/20 text-xs font-bold uppercase tracking-widest hidden md:block">+ Salário</button>
+                    <button onclick="openNewModal()" class="btn-primary flex-1 md:flex-none px-6 py-3 text-sm flex items-center justify-center gap-2"><i data-lucide="plus-circle" class="w-4 h-4"></i> Lançar</button>
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div class="card-premium border-emerald-500/10">
+                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-3">Saldo Disponível</p>
+                    <p id="totalBalance" class="text-3xl font-bold text-white tracking-tighter">R$ 0,00</p>
+                    <div class="mt-4 h-1 w-full bg-white/5 rounded-full overflow-hidden"><div id="balanceProgress" class="h-full bg-emerald-500 w-0 transition-all duration-1000"></div></div>
+                </div>
+                <div class="card-premium">
+                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-3">Entradas</p>
+                    <p id="totalIncome" class="text-3xl font-bold text-emerald-400 tracking-tighter">R$ 0,00</p>
+                </div>
+                <div class="card-premium relative">
+                    <div class="flex justify-between items-start mb-3">
+                        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Saídas</p>
+                        <p id="pendingTotalLabel" class="text-[9px] bg-rose-500/10 text-rose-500 px-2 py-0.5 rounded font-bold uppercase hidden">Falta R$ 0,00</p>
+                    </div>
+                    <p id="totalExpenses" class="text-3xl font-bold text-rose-400 tracking-tighter">R$ 0,00</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                <div class="xl:col-span-2 space-y-6">
+                    <div class="card-premium border-white/10">
+                        <h3 class="text-sm font-bold text-white uppercase mb-6 flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i> Essenciais</h3>
+                        <div id="essentialTracker" class="grid grid-cols-2 md:grid-cols-5 gap-4"></div>
+                    </div>
+
+                    <div class="card-premium min-h-[400px]">
+                        <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-8">
+                            <div class="flex items-center gap-3">
+                                <h3 class="text-lg font-bold text-white">Obrigações do Mês</h3>
+                                <span id="pendingCount" class="text-[10px] px-2 py-1 rounded font-bold uppercase hidden sm:inline-block">...</span>
+                                <span id="transactionCount" class="text-[10px] bg-white/5 px-2 py-1 rounded text-slate-500 font-bold uppercase hidden sm:inline-block">0 itens</span>
+                            </div>
+                            <div class="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto">
+                                <div class="relative w-full sm:w-48">
+                                    <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                                    <input type="text" id="searchInput" oninput="render()" placeholder="Buscar..." class="w-full pl-9 pr-4 py-2 rounded-xl text-xs font-medium">
+                                </div>
+                                <select id="typeFilter" onchange="render()" class="w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-bold text-slate-400 cursor-pointer">
+                                    <option value="all">Todos os Tipos</option>
+                                    <option value="monthly">Fixo (Mensal)</option>
+                                    <option value="installments">Parcelado</option>
+                                    <option value="pix">PIX</option>
+                                    <option value="credit">Cartão de Crédito</option>
+                                    <option value="debit">Cartão de Débito</option>
+                                    <option value="money">Dinheiro</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead>
+                                    <tr class="text-slate-600 text-[10px] uppercase border-b border-white/5">
+                                        <th class="pb-4">Descrição</th>
+                                        <th class="pb-4 text-center hidden sm:table-cell">Frequência</th>
+                                        <th class="pb-4 hidden md:table-cell">Dono</th>
+                                        <th class="pb-4 text-right">Valor</th>
+                                        <th class="pb-4 text-center">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transactionBody" class="divide-y divide-white/5 text-sm"></tbody>
+                            </table>
+                            <div id="emptyState" class="hidden py-20 text-center text-slate-600 italic">Nenhum lançamento encontrado.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="card-premium">
+                        <h3 class="text-sm font-bold text-slate-400 mb-8 uppercase text-center">Categorias</h3>
+                        <div class="h-64 flex items-center justify-center"><canvas id="categoryChart"></canvas></div>
+                        <div id="chartLegend" class="mt-6 space-y-2"></div>
+                    </div>
+                    
+                    <div class="card-premium">
+                        <h3 class="text-sm font-bold text-slate-400 mb-6 uppercase text-center">Divisão</h3>
+                        <div class="flex justify-between text-[11px] mb-4 font-bold">
+                            <span class="text-emerald-400">João Pedro (<span id="percVictor">0</span>%)</span>
+                            <span class="text-blue-400">Adriana (<span id="percRafaela">0</span>%)</span>
+                        </div>
+                        <div class="h-4 w-full bg-white/5 rounded-full overflow-hidden flex border border-white/5">
+                            <div id="barVictor" class="h-full bg-emerald-500 transition-all duration-1000"></div>
+                            <div id="barRafaela" class="h-full bg-blue-500 transition-all duration-1000"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mt-6 text-center font-mono">
+                            <div><p class="text-[10px] text-slate-500 uppercase">R$ João Pedro</p><p id="valueVictor" class="text-sm font-bold">R$ 0</p></div>
+                            <div><p class="text-[10px] text-slate-500 uppercase">R$ Adriana</p><p id="valueRafaela" class="text-sm font-bold">R$ 0</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <main id="planningContainer" class="flex-1 p-6 pb-28 md:p-10 lg:pb-10 overflow-y-auto h-screen hidden animate-in">
+            <header class="mb-10">
+                <h2 class="text-2xl font-bold text-white tracking-tight">Planejamento Estratégico</h2>
+                <p class="text-slate-500 text-xs mt-1 uppercase tracking-widest font-bold">Projeção de Caixa & Metas</p>
+            </header>
+
+            <div class="mb-10">
+                <h3 class="text-sm font-bold text-slate-400 mb-6 uppercase flex items-center gap-2"><i data-lucide="target" class="w-4 h-4 text-emerald-500"></i> Cofres Ativos</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="goalsContainer">
+                </div>
+            </div>
+
+            <div class="w-full">
+                <div class="card-premium h-full w-full">
+                    <h3 class="text-sm font-bold text-slate-400 mb-8 uppercase flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4 text-emerald-500"></i> Projeção 6 Meses</h3>
+                    <div class="h-[400px] w-full"><canvas id="projectionChart"></canvas></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="modalRegistro" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-blur overflow-y-auto">
+        <div class="bg-[#0d0d0f] border border-white/10 w-full max-lg rounded-[32px] p-8 shadow-2xl relative animate-in">
+            <button onclick="toggleModal('modalRegistro')" class="absolute top-6 right-6 text-slate-500"><i data-lucide="x" class="w-6 h-6"></i></button>
+            <h3 id="modalTitle" class="text-2xl font-bold text-white mb-8 text-center tracking-tight">Novo Lançamento</h3>
+            
+            <form id="financeForm" class="space-y-5">
+                <input type="hidden" id="editId" value="">
+                <input id="desc" type="text" required placeholder="Descrição (Ex: Netflix, Aluguel...)" class="w-full px-5 py-4 rounded-2xl text-sm">
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <input id="value" type="number" step="0.01" required placeholder="Valor R$" class="w-full px-5 py-4 rounded-2xl text-sm font-mono">
+                    <select id="category" class="w-full px-5 py-4 rounded-2xl text-sm">
+                        <option value="Essencial">Essencial</option>
+                        <option value="Lazer">Lazer</option>
+                        <option value="Saúde">Saúde</option>
+                        <option value="Mercado">Mercado</option>
+                        <option value="Assinaturas">Assinaturas</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <select id="responsible" class="w-full px-5 py-4 rounded-2xl text-sm">
+                        <option value="João Pedro">João Pedro</option>
+                        <option value="Adriana">Adriana</option>
+                        <option value="Conjunto">Conjunto</option>
+                    </select>
+                    <div class="hidden">
+                        <select id="type"><option value="expense">Despesa</option><option value="income">Receita</option></select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <select id="frequency" onchange="toggleInstallmentField()" class="w-full px-5 py-4 rounded-2xl text-sm">
+                        <option value="single">À vista</option>
+                        <option value="monthly">Mensal (Fixo)</option>
+                        <option value="installments">Parcelado</option>
+                    </select>
+                    <select id="paymentMethod" class="w-full px-5 py-4 rounded-2xl text-sm">
+                        <option value="pix">PIX</option>
+                        <option value="credit">Cartão de Crédito</option>
+                        <option value="debit">Cartão de Débito</option>
+                        <option value="money">Dinheiro/Outros</option>
+                    </select>
+                </div>
+
+                <div id="installmentField" class="hidden animate-in grid grid-cols-2 gap-4 p-4 bg-white/5 rounded-2xl">
+                    <div>
+                        <label class="text-[10px] text-slate-500 font-bold uppercase block mb-2 px-1">Parcela Atual</label>
+                        <input id="currentInstallmentInput" type="number" value="1" min="1" class="w-full px-4 py-3 rounded-xl text-sm">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-slate-500 font-bold uppercase block mb-2 px-1">Total Parcelas</label>
+                        <input id="installments" type="number" value="1" min="1" class="w-full px-4 py-3 rounded-xl text-sm">
+                    </div>
+                </div>
+
+                <button type="submit" id="submitBtn" class="w-full bg-emerald-500 text-black font-bold py-5 rounded-2xl mt-4 uppercase text-xs tracking-widest shadow-lg active:scale-95">Salvar Registro</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalDelete" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4 modal-blur">
+        <div class="bg-[#0d0d0f] border border-rose-500/20 w-full max-sm rounded-[32px] p-8 shadow-2xl text-center animate-in">
+            <h3 class="text-xl font-bold text-white mb-8" id="deleteMsg">Excluir lançamento?</h3>
+            <div class="space-y-3">
+                <button onclick="executeDeleteOne()" class="w-full py-4 rounded-2xl bg-white/5 text-white font-bold text-[10px] uppercase">Apenas este mês</button>
+                <button id="btnDeleteAll" onclick="executeDeleteAll()" class="w-full py-4 rounded-2xl bg-rose-500 text-white font-bold text-[10px] uppercase hidden">Toda a sequência</button>
+                <button onclick="toggleModal('modalDelete')" class="w-full py-4 text-slate-600 text-[10px] font-bold uppercase">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalGoal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-blur overflow-y-auto">
+        <div class="bg-[#0d0d0f] border border-white/10 w-full max-sm rounded-[32px] p-8 shadow-2xl relative animate-in">
+            <button onclick="toggleModal('modalGoal')" class="absolute top-6 right-6 text-slate-500"><i data-lucide="x" class="w-6 h-6"></i></button>
+            <h3 class="text-2xl font-bold text-white mb-8 text-center tracking-tight">Criar Cofre</h3>
+            <form id="goalForm" class="space-y-5">
+                <input id="goalName" type="text" required placeholder="Nome (Ex: Mudança, Carro...)" class="w-full px-5 py-4 rounded-2xl text-sm">
+                <input id="goalTarget" type="number" step="0.01" required placeholder="Meta (Valor R$)" class="w-full px-5 py-4 rounded-2xl text-sm font-mono">
+                <button type="submit" class="w-full bg-emerald-500 text-black font-bold py-5 rounded-2xl mt-4 uppercase text-xs tracking-widest shadow-lg active:scale-95">Salvar Cofre</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalAddFunds" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-blur overflow-y-auto">
+        <div class="bg-[#0d0d0f] border border-white/10 w-full max-sm rounded-[32px] p-8 shadow-2xl relative animate-in">
+            <button onclick="toggleModal('modalAddFunds')" class="absolute top-6 right-6 text-slate-500"><i data-lucide="x" class="w-6 h-6"></i></button>
+            <h3 class="text-2xl font-bold text-white mb-2 text-center tracking-tight">Guardar Valor</h3>
+            <p class="text-slate-500 text-xs text-center mb-6">Este valor será somado ao cofre.</p>
+            <form id="addFundsForm" class="space-y-5">
+                <input id="fundsValue" type="number" step="0.01" required placeholder="Valor R$" class="w-full px-5 py-4 rounded-2xl text-sm font-mono">
+                <button type="submit" class="w-full bg-blue-500 text-white font-bold py-5 rounded-2xl mt-4 uppercase text-xs tracking-widest shadow-lg active:scale-95">Adicionar ao Cofre</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalDeleteGoal" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4 modal-blur">
+        <div class="bg-[#0d0d0f] border border-rose-500/20 w-full max-sm rounded-[32px] p-8 shadow-2xl text-center animate-in">
+            <h3 class="text-xl font-bold text-white mb-8" id="deleteGoalMsg">Excluir cofre?</h3>
+            <div class="space-y-3">
+                <button onclick="executeDeleteGoal()" class="w-full py-4 rounded-2xl bg-rose-500 text-white font-bold text-[10px] uppercase">Sim, excluir</button>
+                <button onclick="toggleModal('modalDeleteGoal')" class="w-full py-4 text-slate-600 text-[10px] font-bold uppercase">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch, query, where } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+
+        // Credenciais atualizadas para o projeto do João
+        const firebaseConfig = {
+            apiKey: "AIzaSyA1A1jNtY3pIHjsqCOhNV_E_HIzUjkT1gE",
+            authDomain: "financas-joao-795ec.firebaseapp.com",
+            projectId: "financas-joao-795ec",
+            storageBucket: "financas-joao-795ec.firebasestorage.app",
+            messagingSenderId: "250590970632",
+            appId: "1:250590970632:web:786c80fe1caa72b12822bd",
+            measurementId: "G-Z575YL6PTQ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const transRef = collection(db, "transactions");
+        const goalsRef = collection(db, "goals");
+
+        let state = [];
+        let goalsState = [];
+        let currentDate = new Date();
+        let pendingDeleteId = null;
+        let activeGoalId = null; 
+        let categoryChart = null;
+        let projChartInstance = null; 
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('appContainer').classList.remove('hidden');
+                document.getElementById('bodyContainer').classList.remove('overflow-hidden');
+                document.getElementById('userEmailDisplay').innerText = user.email;
+                
+                const q = query(transRef, where("userId", "==", user.uid));
+                onSnapshot(q, (snap) => {
+                    state = snap.docs.map(d => ({ firestoreId: d.id, ...d.data() }));
+                    render();
+                    if (!document.getElementById('planningContainer').classList.contains('hidden')) renderPlanning();
+                });
+
+                const qGoals = query(goalsRef, where("userId", "==", user.uid));
+                onSnapshot(qGoals, (snap) => {
+                    goalsState = snap.docs.map(d => ({ firestoreId: d.id, ...d.data() }));
+                    if (!document.getElementById('planningContainer').classList.contains('hidden')) renderGoals();
+                });
+
+            } else {
+                document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('appContainer').classList.add('hidden');
+            }
+        });
+
+        document.getElementById('loginForm').onsubmit = (e) => {
+            e.preventDefault();
+            signInWithEmailAndPassword(auth, document.getElementById('emailInput').value, document.getElementById('passwordInput').value)
+                .catch(() => document.getElementById('loginError').classList.remove('hidden'));
+        };
+
+        window.logout = () => signOut(auth);
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const editId = document.getElementById('editId').value;
+            const data = {
+                userId: auth.currentUser.uid,
+                desc: document.getElementById('desc').value,
+                value: parseFloat(document.getElementById('value').value),
+                category: document.getElementById('category').value,
+                responsible: document.getElementById('responsible').value,
+                type: document.getElementById('type').value,
+                frequency: document.getElementById('frequency').value,
+                paymentMethod: document.getElementById('paymentMethod').value,
+                paid: false 
+            };
+
+            if (editId) {
+                const orig = state.find(t => t.firestoreId === editId);
+                await setDoc(doc(db, "transactions", editId), {
+                    ...data,
+                    month: orig.month,
+                    year: orig.year,
+                    groupId: orig.groupId || null,
+                    currentInstallment: orig.currentInstallment || null,
+                    totalInstallments: orig.totalInstallments || null,
+                    paid: orig.paid || false 
+                }, { merge: true });
+            } else {
+                const batch = writeBatch(db);
+                const gid = Date.now().toString();
+                const freq = data.frequency;
+                let loops = 1;
+                
+                if(freq === 'installments') {
+                    const start = parseInt(document.getElementById('currentInstallmentInput').value);
+                    const total = parseInt(document.getElementById('installments').value);
+                    loops = total - start + 1;
+                    for(let i=0; i<loops; i++) {
+                        const d = new Date(currentDate.getFullYear(), currentDate.getMonth() + i, 1);
+                        batch.set(doc(transRef), {
+                            ...data, month: d.getMonth(), year: d.getFullYear(), groupId: gid,
+                            currentInstallment: start + i, totalInstallments: total
+                        });
+                    }
+                } else if(freq === 'monthly') {
+                    for(let i=0; i<24; i++) {
+                        const d = new Date(currentDate.getFullYear(), currentDate.getMonth() + i, 1);
+                        batch.set(doc(transRef), { ...data, month: d.getMonth(), year: d.getFullYear(), groupId: gid });
+                    }
+                } else {
+                    batch.set(doc(transRef), { ...data, month: currentDate.getMonth(), year: currentDate.getFullYear() });
+                }
+                await batch.commit();
+            }
+            toggleModal('modalRegistro');
+        }
+
+        window.togglePaid = async (id, currentStatus) => {
+            await setDoc(doc(db, "transactions", id), { paid: !currentStatus }, { merge: true });
+        };
+
+        function render() {
+            const m = currentDate.getMonth(), y = currentDate.getFullYear();
+            const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+            document.getElementById('displayMonth').innerText = `${months[m]} ${y}`;
+
+            const currentT = state.filter(t => t.month === m && t.year === y);
+            
+            const searchInput = document.getElementById('searchInput');
+            const typeFilterEl = document.getElementById('typeFilter');
+            const search = searchInput ? searchInput.value.toLowerCase() : '';
+            const typeFilter = typeFilterEl ? typeFilterEl.value : 'all';
+            
+            const filteredT = currentT.filter(t => {
+                const matchSearch = t.desc.toLowerCase().includes(search);
+                let matchType = true;
+                if (typeFilter === 'monthly') matchType = t.frequency === 'monthly';
+                else if (typeFilter === 'installments') matchType = t.frequency === 'installments';
+                else if (typeFilter === 'pix') matchType = t.paymentMethod === 'pix';
+                else if (typeFilter === 'credit') matchType = t.paymentMethod === 'credit';
+                else if (typeFilter === 'debit') matchType = t.paymentMethod === 'debit';
+                else if (typeFilter === 'money') matchType = t.paymentMethod === 'money';
+                return matchSearch && matchType;
+            });
+
+            let inc = 0, exp = 0, pendingExp = 0, vExp = 0, rExp = 0, cats = {};
+            currentT.forEach(t => {
+                if(t.type === 'income') {
+                    inc += t.value;
+                } else {
+                    exp += t.value;
+                    if (!t.paid) pendingExp += t.value;
+                    const catName = t.category || 'Outros'; 
+                    cats[catName] = (cats[catName] || 0) + t.value;
+                    
+                    if(t.responsible === 'João Pedro') vExp += t.value;
+                    else if(t.responsible === 'Adriana') rExp += t.value;
+                    else { vExp += t.value/2; rExp += t.value/2; }
+                }
+            });
+
+            document.getElementById('totalBalance').innerText = `R$ ${(inc - exp).toLocaleString('pt-br', {minimumFractionDigits: 2})}`;
+            document.getElementById('totalIncome').innerText = `R$ ${inc.toLocaleString('pt-br', {minimumFractionDigits: 2})}`;
+            document.getElementById('totalExpenses').innerText = `R$ ${exp.toLocaleString('pt-br', {minimumFractionDigits: 2})}`;
+
+            const pendingLabel = document.getElementById('pendingTotalLabel');
+            if (pendingLabel) {
+                if (pendingExp > 0) {
+                    pendingLabel.innerText = `Falta R$ ${pendingExp.toLocaleString('pt-br', {minimumFractionDigits: 2})}`;
+                    pendingLabel.classList.remove('hidden');
+                } else {
+                    pendingLabel.classList.add('hidden');
+                }
+            }
+
+            document.getElementById('balanceProgress').style.width = `${inc > 0 ? Math.max(0, Math.min(100, ((inc-exp)/inc)*100)) : 0}%`;
+
+            const totalE = vExp + rExp;
+            const pV = totalE > 0 ? Math.round((vExp/totalE)*100) : 0;
+            document.getElementById('percVictor').innerText = pV; document.getElementById('percRafaela').innerText = 100-pV;
+            document.getElementById('barVictor').style.width = `${pV}%`; document.getElementById('barRafaela').style.width = `${100-pV}%`;
+            document.getElementById('valueVictor').innerText = `R$ ${vExp.toLocaleString('pt-br', {minimumFractionDigits: 2})}`;
+            document.getElementById('valueRafaela').innerText = `R$ ${rExp.toLocaleString('pt-br', {minimumFractionDigits: 2})}`;
+
+            const tbody = document.getElementById('transactionBody'); tbody.innerHTML = '';
+            filteredT.sort((a,b) => b.value - a.value).forEach(t => {
+                const tr = document.createElement('tr'); tr.className = "group hover:bg-white/[0.02]";
+                const isPaid = t.paid || false;
+                const icon = isPaid ? 'check-circle-2' : (t.type === 'income' ? 'trending-up' : 'credit-card');
+                const freqText = t.totalInstallments ? t.currentInstallment+'/'+t.totalInstallments : (t.frequency==='monthly'?'Fixo':'Único');
+
+                tr.innerHTML = `<td class="py-4 flex items-center gap-3">
+                    <button onclick="togglePaid('${t.firestoreId}', ${isPaid})" class="min-w-[32px] w-8 h-8 rounded-lg ${isPaid ? 'bg-emerald-500/10' : 'bg-white/5'} flex items-center justify-center hover:scale-110 transition-all cursor-pointer">
+                        <i data-lucide="${icon}" class="w-4 h-4 ${isPaid ? 'text-emerald-500' : 'text-slate-400'}"></i>
+                    </button>
+                    <div class="${isPaid ? 'opacity-40' : ''} transition-all w-full">
+                        <p class="font-bold text-white text-sm leading-tight flex items-center flex-wrap gap-x-2 gap-y-1 ${isPaid ? 'line-through' : ''}">${t.desc}</p>
+                        <p class="text-[9px] text-slate-500 uppercase tracking-widest mt-1">${t.category || 'Outros'}</p>
+                    </div>
+                </td>
+                <td class="py-4 text-center text-[9px] text-slate-500 font-bold uppercase hidden sm:table-cell">${freqText}</td>
+                <td class="py-4 text-[9px] text-slate-400 font-bold uppercase hidden md:table-cell">${t.responsible}</td>
+                <td class="py-4 text-right font-mono font-bold ${t.type==='income'?'text-emerald-400':'text-rose-400'}">R$ ${t.value.toLocaleString('pt-br', {minimumFractionDigits: 2})}</td>
+                <td class="py-4 text-center">
+                    <div class="flex justify-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all">
+                        <button onclick="openEditModal('${t.firestoreId}')" class="p-1 sm:p-2 text-slate-600 hover:text-emerald-500"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                        <button onclick="promptDelete('${t.firestoreId}')" class="p-1 sm:p-2 text-slate-600 hover:text-rose-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                </td>`;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('emptyState').classList.toggle('hidden', filteredT.length > 0);
+            updateChart(cats);
+            lucide.createIcons();
+        }
+        
+        window.render = render;
+        
+        function updateChart(data) {
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            const labels = Object.keys(data);
+            const values = Object.values(data);
+            const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e'];
+            if (categoryChart) categoryChart.destroy();
+            categoryChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels: labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0, hoverOffset: 8 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '80%' }
+            });
+            const legendDiv = document.getElementById('chartLegend'); legendDiv.innerHTML = '';
+            labels.forEach((l, i) => {
+                legendDiv.innerHTML += `<div class="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest"><div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full" style="background:${colors[i]}"></div><span class="text-slate-400">${l}</span></div><span class="text-white font-mono">R$ ${data[l].toLocaleString('pt-br', {minimumFractionDigits: 2})}</span></div>`;
+            });
+        }
+
+        window.changeMonth = (d) => { currentDate.setMonth(currentDate.getMonth() + d); render(); };
+        window.toggleModal = (id) => { document.getElementById(id).classList.toggle('hidden'); };
+        window.resetForm = () => {
+            document.getElementById('editId').value = "";
+            document.getElementById('financeForm').reset();
+            document.getElementById('paymentMethod').value = "pix"; 
+            window.toggleInstallmentField();
+        };
+
+        window.openNewModal = () => { window.resetForm(); window.toggleModal('modalRegistro'); };
+        window.openEditModal = (id) => {
+            const t = state.find(x => x.firestoreId === id);
+            if (!t) return;
+            window.resetForm(); 
+            document.getElementById('editId').value = t.firestoreId; 
+            document.getElementById('desc').value = t.desc;
+            document.getElementById('value').value = t.value;
+            document.getElementById('category').value = t.category || "Outros";
+            document.getElementById('responsible').value = t.responsible;
+            document.getElementById('frequency').value = t.frequency;
+            document.getElementById('type').value = t.type;
+            document.getElementById('paymentMethod').value = t.paymentMethod || "pix";
+            if (t.frequency === 'installments') {
+                document.getElementById('currentInstallmentInput').value = t.currentInstallment;
+                document.getElementById('installments').value = t.totalInstallments;
+            }
+            window.toggleInstallmentField();
+            window.toggleModal('modalRegistro'); 
+        };
+
+        window.promptDelete = (id) => {
+            pendingDeleteId = id;
+            window.toggleModal('modalDelete');
+        };
+
+        window.executeDeleteOne = () => deleteDoc(doc(db, "transactions", pendingDeleteId)).then(() => window.toggleModal('modalDelete'));
+        window.executeDeleteAll = async () => {
+            const t = state.find(x => x.firestoreId === pendingDeleteId);
+            const batch = writeBatch(db);
+            state.filter(x => x.groupId === t.groupId).forEach(x => batch.delete(doc(db, "transactions", x.firestoreId)));
+            await batch.commit(); window.toggleModal('modalDelete');
+        };
+
+        window.toggleInstallmentField = () => document.getElementById('installmentField').classList.toggle('hidden', document.getElementById('frequency').value !== 'installments');
+        window.openSalaryModal = () => { 
+            window.resetForm(); 
+            document.getElementById('desc').value = "Salário Mensal"; 
+            document.getElementById('type').value = "income"; 
+            window.toggleModal('modalRegistro'); 
+        };
+
+        window.switchTab = (tab) => {
+            const dashboard = document.getElementById('dashboardContainer');
+            const planning = document.getElementById('planningContainer');
+            if (tab === 'dashboard') {
+                dashboard.classList.remove('hidden'); planning.classList.add('hidden');
+                document.getElementById('btnTabDashboard').classList.add('sidebar-item-active');
+                document.getElementById('btnTabPlanning').classList.remove('sidebar-item-active');
+            } else {
+                dashboard.classList.add('hidden'); planning.classList.remove('hidden');
+                document.getElementById('btnTabPlanning').classList.add('sidebar-item-active');
+                document.getElementById('btnTabDashboard').classList.remove('sidebar-item-active');
+                renderPlanning(); renderGoals();
+            }
+        };
+
+        window.renderPlanning = () => {
+            const monthsNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+            let labels = [];
+            let projectedBalances = [];
+            for (let i = 0; i < 6; i++) {
+                let targetDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + i, 1);
+                let m = targetDate.getMonth();
+                let y = targetDate.getFullYear();
+                labels.push(`${monthsNames[m]}/${y.toString().slice(-2)}`);
+                let tMonth = state.filter(t => t.month === m && t.year === y);
+                let inc = 0, exp = 0;
+                tMonth.forEach(t => {
+                    if (t.type === 'income') inc += t.value;
+                    else exp += t.value;
+                });
+                projectedBalances.push(inc - exp);
+            }
+            const ctx = document.getElementById('projectionChart').getContext('2d');
+            if (projChartInstance) projChartInstance.destroy();
+            projChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Saldo Projetado',
+                        data: projectedBalances,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        };
+
+        window.renderGoals = () => {
+            const container = document.getElementById('goalsContainer');
+            container.innerHTML = '';
+            goalsState.forEach(goal => {
+                const perc = goal.target > 0 ? Math.min(100, (goal.saved / goal.target) * 100) : 0;
+                const div = document.createElement('div');
+                div.className = `card-premium border-blue-500/10 relative group transition-all`;
+                div.innerHTML = `
+                    <div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all z-10">
+                        <button onclick="openAddFundsModal('${goal.firestoreId}')" class="p-1.5 bg-emerald-500/10 text-emerald-500 rounded-lg hover:scale-110"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="promptDeleteGoal('${goal.firestoreId}')" class="p-1.5 bg-rose-500/10 text-rose-500 rounded-lg hover:scale-110"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                    </div>
+                    <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Cofre</p>
+                    <p class="text-lg font-bold text-white mb-4">${goal.name}</p>
+                    <div class="flex justify-between text-[11px] mb-2 font-bold">
+                        <span class="text-blue-400">R$ ${goal.saved.toLocaleString('pt-br')}</span>
+                        <span class="text-slate-500">R$ ${goal.target.toLocaleString('pt-br')}</span>
+                    </div>
+                    <div class="h-2 w-full bg-white/5 rounded-full overflow-hidden flex border border-white/5">
+                        <div class="h-full bg-blue-500" style="width: ${perc}%"></div>
+                    </div>`;
+                container.appendChild(div);
+            });
+            lucide.createIcons();
+        };
+
+        document.getElementById('financeForm').onsubmit = handleFormSubmit;
+        document.getElementById('goalForm').onsubmit = async (e) => {
+            e.preventDefault();
+            await setDoc(doc(collection(db, "goals")), {
+                userId: auth.currentUser.uid,
+                name: document.getElementById('goalName').value,
+                target: parseFloat(document.getElementById('goalTarget').value),
+                saved: 0
+            });
+            toggleModal('modalGoal');
+        };
+        
+        window.openAddFundsModal = (id) => { activeGoalId = id; toggleModal('modalAddFunds'); };
+        document.getElementById('addFundsForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const amount = parseFloat(document.getElementById('fundsValue').value);
+            const goal = goalsState.find(g => g.firestoreId === activeGoalId);
+            if (goal) await setDoc(doc(db, "goals", activeGoalId), { saved: goal.saved + amount }, { merge: true });
+            toggleModal('modalAddFunds');
+        };
+        window.promptDeleteGoal = (id) => { activeGoalId = id; toggleModal('modalDeleteGoal'); };
+        window.executeDeleteGoal = async () => { await deleteDoc(doc(db, "goals", activeGoalId)); toggleModal('modalDeleteGoal'); };
+
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+    </script>
+</body>
+</html>
