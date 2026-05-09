@@ -1,0 +1,16 @@
+{
+  "name": "J&A Finanças Premium",
+  "short_name": "J&A Finanças",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0a0a0b",
+  "theme_color": "#10b981",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/5817/5817088.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
